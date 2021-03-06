@@ -23,8 +23,8 @@ class TN_PT_TrafficNodesPanel(bpy.types.Panel):
         layout = self.layout
         nodeTree = getTrafficNodeTree(context).name
 
-        setup = layout.operator("tn.setup_node_tree")
-        setup.nodeTreeName = nodeTree
+        #setup = layout.operator("tn.setup_node_tree")
+        #setup.nodeTreeName = nodeTree
 
         layout.separator()
         execute = layout.operator("tn.execute_node_tree")
@@ -57,14 +57,12 @@ class SetupNodeTree(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(TN_PT_TrafficNodesPanel)
-    bpy.utils.register_class(SetupNodeTree)
     if True:
         print("TN_PT_TrafficNodesPanel Registered")
         print("SetUpNodeTree Registered")
 
 def unregister():
     bpy.utils.unregister_class(TN_PT_TrafficNodesPanel)
-    bpy.utils.unregister_class(SetupNodeTree)
     if True:
         print("TN_PT_TrafficNodesPanel UnRegistered")
         print("SetUpNodeTree UnRegistered")

@@ -25,7 +25,7 @@ bl_info = {
     "name":         "Traffic Nodes",
     "description":  "Node system for more flexible Traffic System Simulation",
     "author":       "REYNEP",
-    "version":      (0, 0, 1),
+    "version":      (0, 0, 2),
     "blender":      (2, 93, 0),
     "location":     "Node Editor",
     "category":     "Animation",
