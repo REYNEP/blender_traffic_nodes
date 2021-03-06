@@ -1,38 +1,18 @@
-'''
-Copyright (C) 2021 REYNEP
-parkeramitrakshar@gmail.com
-
-Created by REYNEP
-Thanks to JaquesLucke [Creator of Animation Nodes and Geo Nodes in Blender], 
-Because of the Inspiration and also I mostly Followed His Older Code to Do it Faster [Meaning that, Yes I did copy Parts of His code from 2014-2015]
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
 # TODO: Maybe Emit the next Line, See Line #32, #126
 import bpy
+import sys
 from bpy.utils import register_class, unregister_class
 from bpy.types import Node, Object, Collection, Text
 from bpy.props import PointerProperty, CollectionProperty, BoolProperty
 # Lets See if this FIxes the issue or not
-from tn_node_base import TrafficNode
+from . tn_node_base import TrafficNode
 
 #TODO INSPECT MAYBE SEP into another file 
 class ObjectPropertyGroup(bpy.types.PropertyGroup):
-	object = PointerProperty(type = Object)
+	object: PointerProperty(type = Object)
 	
 class CollectionPropertyGroup(bpy.types.PropertyGroup):
-	collection = PointerProperty(type = Collection)
+	collection: PointerProperty(type = Collection)
 
 class ViewerNode(Node, TrafficNode):
 	bl_idname = "ViewerNode"
@@ -66,7 +46,7 @@ class ObjectSelectionNode(Node, TrafficNode):
 	
 	objectCP: CollectionProperty(type = ObjectPropertyGroup)
 	collectionCP: CollectionProperty(type = CollectionPropertyGroup)
-	showEditOptions = BoolProperty(default = False)
+	showEditOptions: BoolProperty(default = False)
 	
 	def init(self, context):
 		self.outputs.new("ObjectSocket", "Object")
@@ -171,6 +151,28 @@ class ObjectSelectionNode(Node, TrafficNode):
 		self.collectionCP[index].object = object
 
 
+#class ObjectListToLocationsList(Node, TrafficNode):
+
+#class SetInitialPositionsNode(Node, TrafficNode):
+#	bl_idname = "SetInitialPositionsNode"
+#	bl_label = "Set Initial Pos Mk.1"
+#	
+#	def init(self, context):
+#		#TODO: Add Generic VectorListSocket
+#		#TODO: Mix Float and INT Support for Vector, Maybe things like String toos
+#		
+#	def draw_buttons(self, context, layout):
+#		col = layout.column(align = True)
+#		save = col.operator("tn.save_initial_data", text = "Cache Location", icon = "FILE_CACHE")
+#			
+#	def execute(self, input):
+#		if self.inputs["Data"].is_linked:
+#			if self.textBlock is not None:
+#				self.textBlock.clear()
+#				text = str(input)
+#				self.textBlock.write(text)
+
+
 
 # Register
 # -------------
@@ -185,14 +187,15 @@ def register():
 	if True:
 		print("ObjectSelectionNode Registered")
 		print("ViewerNode Registered")
+		print("CALLING FROM tn_nodes.py inside source/nodes", sys.path)
 
 def unregister():
-	#TODO Move this into ANOTHER FIle MAYBE PropGroups
-	unregister_class(ObjectPropertyGroup)
-	unregister_class(CollectionPropertyGroup)
+	register_class(ObjectPropertyGroup)
+	register_class(CollectionPropertyGroup)
 
-	unregister_class(ObjectSelectionNode)
-	unregister_class(ViewerNode)
+	#Nodes
+	register_class(ObjectSelectionNode)
+	register_class(ViewerNode)
 	if True:
 		print("ObjectSelectionNode UnRegistered")
 		print("ViewerNode UnRegistered")

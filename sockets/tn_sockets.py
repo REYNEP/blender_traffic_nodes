@@ -1,27 +1,6 @@
-'''
-Copyright (C) 2021 REYNEP
-parkeramitrakshar@gmail.com
-
-Created by REYNEP
-Thanks to JaquesLucke [Creator of Animation Nodes and Geo Nodes in Blender], 
-Because of the Inspiration and also I mostly Followed His Older Code to Do it Faster [Meaning that, Yes I did copy Parts of His code from 2014-2015]
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
 from bpy.utils import register_class, unregister_class
 from bpy.types import NodeSocket
-from bpy.props import StringProperty
+from bpy.props import StringProperty, FloatVectorProperty
 
 class GenericSocket(NodeSocket):
 	bl_idname = "GenericSocket"
@@ -54,8 +33,7 @@ class ObjectSocket(NodeSocket):
 			selector.target = "objectName"
 			col.separator()
 		else:
-			txt = text
-			layout.label(text=txt)
+			layout.label(text = text)
 			
 	def draw_color(self, context, node):
 		return (0, 0, 0, 1)
@@ -71,6 +49,37 @@ class ObjectListSocket(NodeSocket):
 		layout.label(text = text)
 	def draw_color(self, context, node):
 		return (0, 0, 0, 0.5)
+	
+	def getValue(self):
+		return "No Object List Input"
+
+class Vec3DSocket(NodeSocket):
+	bl_idname = "Vec3DSocket"
+	bl_label = "Vec3D Socket"
+	
+	#Precision is Display Precision, Default value is 0.0, 0.0., 0.0
+	#TODO: INSPECT Docs on this
+	vec3D: FloatVectorProperty(precision = 2, size = 3)
+	
+	#TODO: INSPECT This doesn't Seem important
+	def draw(self, context, layout, node, text):
+		layout.label(text = text)
+			
+	def draw_color(self, context, node):
+		return (0.15, 0.15, 0.8, 1.0)
+
+	def getValue(self):
+		return self.vec3D
+	
+class Vec3DListSocket(NodeSocket):
+	bl_idname = "ObjectListSocket"
+	bl_label = "Object List Socket"
+	
+	def draw(self, context, layout, node, text):
+		layout.label(text = text)
+
+	def draw_color(self, context, node):
+		return (0.15, 0.15, 0.8, 0.5)
 	
 	def getValue(self):
 		return "No Object List Input"

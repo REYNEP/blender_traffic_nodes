@@ -1,55 +1,12 @@
-'''
-Copyright (C) 2021 REYNEP
-parkeramitrakshar@gmail.com
-
-Created by REYNEP
-Thanks to JaquesLucke [Creator of Animation Nodes and Geo Nodes in Blender], 
-Because of the Inspiration and also I mostly Followed His Older Code to Do it Faster [Meaning that, Yes I did copy Parts of His code from 2014-2015]
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
 import bpy
-#TODO INSPECT
-from tn_utils import *
 
-class TN_PT_TrafficNodesPanel(bpy.types.Panel):
-	bl_idname = "TN_PT_traffic_nodes_panel"
-	bl_label = "Traffic Nodes"
-	bl_space_type = "NODE_EDITOR"
-	bl_region_type = "UI"
-	bl_category = "Tool"
-	bl_context = "objectmode"
-	
-	@classmethod
-	def poll(self, context):
-		area = context.area.spaces.active
-		isNodeEditor = (area.type == 'NODE_EDITOR')
-		if isNodeEditor and hasattr(area.node_tree, 'isTrafficNodeTree'):
-			return area.node_tree.isTrafficNodeTree
-		else:
-			return False
-	
-	def draw(self, context):
-		layout = self.layout
-		execute = layout.operator("tn.execute_node_tree")
-		execute.nodeTreeName = getTrafficNodeTree(context).name
-
+#CURRENT EXECUTION SYSTEM is ONLY BASED on tn.execute_node_tree.... 
+#This is the way!
 class ExecuteNodeTree(bpy.types.Operator):
 	bl_idname = "tn.execute_node_tree"
 	bl_label = "Execute Node Tree"
 	
-	nodeTreeName = bpy.props.StringProperty()
+	nodeTreeName: bpy.props.StringProperty()
 			
 	def execute(self, context):
 		nodeTree = bpy.data.node_groups.get(self.nodeTreeName)
@@ -59,6 +16,18 @@ class ExecuteNodeTree(bpy.types.Operator):
 		TrafficNodeTree.execute()
 		
 		return {'FINISHED'}
+
+class SetupNodeTree(bpy.types.Operator):
+	bl_idname = "tn.setup_node_tree"
+	bl_label = "Create Node Tree Essentials"
+
+	nodeTreeName: bpy.props.StringProperty()
+
+	def execute(self, context):
+		nodeTree = bpy.data.node_groups.get(self.nodeTreeName)
+		if nodeTree is None: return {'FINISHED'}
+
+		bpy.ops.node.add_node(type = "ViewerNode")
 
 
 
@@ -101,6 +70,7 @@ class ExecTrafficNodeTree:
 				value = parentNode.output[socket.links[0].from_socket.name]
 			else:
 				value = socket.getValue()
+				
 			node.input[socket.name] = value
 
 
@@ -135,15 +105,11 @@ class ExecTrafficNode:
 # -------------
 
 def register():
-	bpy.utils.register_class(TN_PT_TrafficNodesPanel)
 	bpy.utils.register_class(ExecuteNodeTree)
 	if True:
-		print("TN_PT_TrafficNodesPanel Registered")
 		print("ExecuteNodeTree Registered")
 
 def unregister():
-	bpy.utils.unregister_class(TN_PT_TrafficNodesPanel)
 	bpy.utils.unregister_class(ExecuteNodeTree)
 	if True:
-		print("TN_PT_TrafficNodesPanel UnRegistered")
 		print("ExecuteNodeTree UnRegistered")
