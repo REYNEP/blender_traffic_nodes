@@ -1,3 +1,4 @@
+import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, register_node_categories, unregister_node_categories
 
 class TrafficNodesCategory(NodeCategory):
