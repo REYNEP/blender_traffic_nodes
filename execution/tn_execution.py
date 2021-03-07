@@ -17,19 +17,6 @@ class ExecuteNodeTree(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class SetupNodeTree(bpy.types.Operator):
-    bl_idname = "tn.setup_node_tree"
-    bl_label = "Create Node Tree Essentials"
-
-    nodeTreeName: bpy.props.StringProperty()
-
-    def execute(self, context):
-        nodeTree = bpy.data.node_groups.get(self.nodeTreeName)
-        if nodeTree is None: return {'FINISHED'}
-
-        bpy.ops.node.add_node(type = "ViewerNode")
-
-
 
 # EXECUTION HELPERS
 # ---------------------
@@ -98,18 +85,3 @@ class ExecTrafficNode:
 
 # ---------------------
 # EXECUTION HELPERS
-
-
-
-# Register
-# -------------
-
-def register():
-    bpy.utils.register_class(ExecuteNodeTree)
-    if True:
-        print("ExecuteNodeTree Registered")
-
-def unregister():
-    bpy.utils.unregister_class(ExecuteNodeTree)
-    if True:
-        print("ExecuteNodeTree UnRegistered")

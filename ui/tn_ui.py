@@ -2,6 +2,13 @@ import bpy
 from . tn_ui_utils import *
 from .. tn_utils import *
 
+
+#This is a set, Don't Misjudge for Dictionary
+classesNotToReg = {
+    'SetupNodeTree'
+}
+
+
 class TN_PT_TrafficNodesPanel(bpy.types.Panel):
     bl_idname = "TN_PT_traffic_nodes_panel"
     bl_label = "Traffic Nodes"
@@ -53,16 +60,3 @@ class SetupNodeTree(bpy.types.Operator):
             bpy.ops.node.translate_attach_remove_on_cancel('INVOKE_DEFAULT')
         
         return {'FINISHED'}
-
-
-def register():
-    bpy.utils.register_class(TN_PT_TrafficNodesPanel)
-    if True:
-        print("TN_PT_TrafficNodesPanel Registered")
-        print("SetUpNodeTree Registered")
-
-def unregister():
-    bpy.utils.unregister_class(TN_PT_TrafficNodesPanel)
-    if True:
-        print("TN_PT_TrafficNodesPanel UnRegistered")
-        print("SetUpNodeTree UnRegistered")

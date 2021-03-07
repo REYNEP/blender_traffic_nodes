@@ -7,6 +7,7 @@ from bpy.props import PointerProperty, CollectionProperty, BoolProperty
 # Lets See if this FIxes the issue or not
 from . tn_node_base import TrafficNode
 
+
 #TODO INSPECT MAYBE SEP into another file 
 class ObjectPropertyGroup(bpy.types.PropertyGroup):
     object: PointerProperty(type = Object)
@@ -171,31 +172,3 @@ class ObjectSelectionNode(Node, TrafficNode):
 #				self.textBlock.clear()
 #				text = str(input)
 #				self.textBlock.write(text)
-
-
-
-# Register
-# -------------
-def register():
-    #TODO Move this into ANOTHER FIle MAYBE PropGroups
-    register_class(ObjectPropertyGroup)
-    register_class(CollectionPropertyGroup)
-
-    #Nodes
-    register_class(ObjectSelectionNode)
-    register_class(ViewerNode)
-    if True:
-        print("ObjectSelectionNode Registered")
-        print("ViewerNode Registered")
-        print("CALLING FROM tn_nodes.py inside source/nodes", sys.path)
-
-def unregister():
-    unregister_class(ObjectPropertyGroup)
-    unregister_class(CollectionPropertyGroup)
-
-    #Nodes
-    unregister_class(ObjectSelectionNode)
-    unregister_class(ViewerNode)
-    if True:
-        print("ObjectSelectionNode UnRegistered")
-        print("ViewerNode UnRegistered")

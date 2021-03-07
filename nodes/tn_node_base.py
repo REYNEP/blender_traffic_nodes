@@ -18,13 +18,3 @@ class TrafficNodesTree(NodeTree):
     def update(self):
         #TODO
         pass
-
-def register():
-    register_class(TrafficNodesTree)
-    if True:
-        print("TrafficNodesTree Registered")
-
-def unregister():
-    unregister_class(TrafficNodesTree)
-    if True:
-        print("TrafficNodesTree UnRegistered")

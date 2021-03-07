@@ -2,6 +2,12 @@ from bpy.utils import register_class, unregister_class
 from bpy.types import NodeSocket
 from bpy.props import StringProperty, FloatVectorProperty
 
+
+classesNotToReg = {
+    'Vec3DListSocket',
+    'Vec3DSocket'
+}
+
 class GenericSocket(NodeSocket):
     bl_idname = "GenericSocket"
     bl_label = "Generic Socket"
@@ -83,24 +89,3 @@ class Vec3DListSocket(NodeSocket):
     
     def getValue(self):
         return "No Object List Input"
-
-
-# Register
-# -------------
-def register():
-    register_class(GenericSocket)
-    register_class(ObjectSocket)
-    register_class(ObjectListSocket)
-    if True:
-        print("GenericSocket Registered")
-        print("ObjectSocket Registered")
-        print("ObjectListSocket Registered")
-
-def unregister():
-    unregister_class(GenericSocket)
-    unregister_class(ObjectSocket)
-    unregister_class(ObjectListSocket)
-    if True:
-        print("GenericSocket UnRegistered")
-        print("ObjectSocket UnRegistered")
-        print("ObjectListSocket UnRegistered")

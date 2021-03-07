@@ -62,8 +62,15 @@ def getSubClasses(parentClasses):
     classesToRegister = []
 
     for module in modulesImported:
+        excludeClasses = set()
+        if hasattr(module, 'classesNotToReg'):
+            excludeClasses = module.classesNotToReg
+        
         for value in module.__dict__.values():
             if inspect.isclass(value):
+                if value.__name__ in excludeClasses:
+                    continue
+                
                 #issubclass does support passing in a tuple or list
                 if issubclass(value, parentClasses) and not hasattr(bpy.types, value.__name__):
                     print(value, "appending")
@@ -115,7 +122,17 @@ def getDependencyClasses():
 # ----       objectCP: CollectionProperty(type = ObjectPropertyGroup)
 # ----
 # ---- in that case ObjectPropertyGroup is considered to be a dependencyClass and is registered before all the other classes are registered
-# 5. Call registerClasses() [THE END]
+# --
+# 5. If you want to exlude any Class in a module from registering, make a 'classesNotToReg' list/tuple/set [set is recommended] and add class to that list
+# 5.3 Finding an Element inside Set takes way less time https://stackoverflow.com/a/17945009
+# 5.0 Sometimes, registering some classes like Operator and not actually using them can cause errors while trying to unregister_class
+# 5.1 If having errors, you might note that, you just have to put NAMES [STR] of your classes, and not the classes itself
+# 5.2 e.g  
+# ----     classesNotToReg = set(
+# ----         'ExecuteNodeTree'    #This is a Name of a Class
+# ----     )
+# --
+# 6. Call registerClasses() [THE END]
 
 def loadModules(addonDir):
     global moduleNames

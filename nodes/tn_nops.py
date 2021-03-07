@@ -134,27 +134,3 @@ class AssignActiveObjectToListNode(bpy.types.Operator):
 #		with open()
 #		if len(arrayOfData) > 0:
 #			np.array(arrayOfData).tofile()
-
-
-# Register
-# -------------
-nopsClasses = [
-    AssignActiveObjectToNode,
-    NewPropertyToListNode,
-    RemovePropertyFromListNode,
-    NewCollectionToListNode,
-    RemoveCollectionFromListNode,
-    AssignActiveObjectToListNode,
-]
-
-def register():
-    for cls in nopsClasses:
-        register_class(cls)
-        if True:
-            print(cls, " Registered")
-
-def unregister():
-    for cls in nopsClasses:
-        unregister_class(cls)
-        if True:
-            print(cls, " Registered")
