@@ -72,8 +72,8 @@ class Vec3DSocket(NodeSocket):
         return self.vec3D
     
 class Vec3DListSocket(NodeSocket):
-    bl_idname = "ObjectListSocket"
-    bl_label = "Object List Socket"
+    bl_idname = "Vec3DListSocket"
+    bl_label = "Vec3D List Socket"
     
     def draw(self, context, layout, node, text):
         layout.label(text = text)

@@ -173,7 +173,7 @@ def registerClasses():
         bpy.utils.register_class(cls)
 
 def unregisterClasses():
-    for cls in reversed(moduleClasses):
+    for cls in moduleClasses:
         print("uNrEG:-", str(cls))
         bpy.utils.unregister_class(cls)
 

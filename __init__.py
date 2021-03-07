@@ -56,14 +56,20 @@ bpyTypes = tuple(getattr(bpy.types, name) for name in [
 
 load_and_reg.loadClasses(bpyTypes)
 
+from . ui import tn_ui_node_menu
+
 # REGISTER, The Entire Addon
 # -----------------------------
 def register():
     #load_and_reg.registerModules()  #registers every classes inside modules only by one with bpy.utils.register_class
     load_and_reg.registerClasses()
+
+    tn_ui_node_menu.register()
     print("Registered Traffic Nodes")
     
 def unregister():
     load_and_reg.unregisterClasses()
-    print("UnRegistered Animation Nodes")
+
+    tn_ui_node_menu.unregister()
+    print("UnRegistered Traffic Nodes")
 #No Need for   if __name__ == __main__, Blender calls register() by default when someone Enables the Addon
