@@ -45,13 +45,25 @@ from . import load_and_reg
 currentDir = os.path.dirname(os.path.abspath(__file__))
 load_and_reg.loadModules(currentDir)
 
+bpyTypes = tuple(getattr(bpy.types, name) for name in [
+    'Operator',
+    'Node',
+    'NodeTree',
+    'NodeSocket',
+    'Panel',
+    'PropertyGroup'
+])
+
+load_and_reg.loadClasses(bpyTypes)
+
 # REGISTER, The Entire Addon
 # -----------------------------
 def register():
-    load_and_reg.registerModules()
+    #load_and_reg.registerModules()  #registers every classes inside modules only by one with bpy.utils.register_class
+    load_and_reg.registerClasses()
     print("Registered Traffic Nodes")
     
 def unregister():
-    load_and_reg.unregisterModules()
+    load_and_reg.unregisterClasses()
     print("UnRegistered Animation Nodes")
 #No Need for   if __name__ == __main__, Blender calls register() by default when someone Enables the Addon

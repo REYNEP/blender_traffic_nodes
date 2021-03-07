@@ -1,20 +1,38 @@
-#This Module Loads all the Other modules, Calls Register() functions if those modules have any, Thus Registering modules that can be reg. to Blender
+"""This Module Loads all the Other modules, Calls Register() functions if those modules have any, Thus Registering modules that can be reg. to Blender"""
+
+#Req for loadModules
 import pkgutil
 from pathlib import Path
 import importlib
+#Req for loadClasses
+import bpy.types
+import inspect
+import typing
 
-#tnModuleNames are just strings, tnModulesImported refer to actual modules which are imported
-tnModuleNames = []
-tnModulesImported = []
+import bpy.utils
 
-#If you want Docs, 3Below ;)
+
+
+moduleNames = []
+modulesImported = []
+moduleClasses = []
+dependencyClasses = []      #Note that dependencyClasses are also inside MODULES which were Imported
+
+# LIBRARY UTILITIES
+# [a.k.a Functions that are used by the LIBRARY FUNCTIONS, (See Below for LIBRARY FUNCS)]
+# If you want Docs, 3Below ;)
+# --------------------------##############################--------------------------------
+# [The 2 Functions Below, Should not be called outside of loadModules]
 def getModuleNames(root, package = ''):
+    """Creates a Generator Object which later can be used to importModules. Generates ModuleNames absolute to AddonDirectory. 
+    All py files inside your addon dir and Addon Packages are Modules. Package is explaine in the Next Comment 6 lines after this line
+    """
     if not isinstance(root, Path):
         root = Path(root)
     
     absolutePath = package
     for moduleDir, moduleName, ispkg in pkgutil.iter_modules([str(root)]):
-        #A Package is a 
+        #A Package is simply a Directory which has a __init__.py inside it, So yes if you have py files inside a Dir which need to be reg. make __init__.py
         if ispkg:
             rootNext = root / moduleName
             absolutePathNext = absolutePath + moduleName + '.'
@@ -28,45 +46,164 @@ def getModuleNames(root, package = ''):
 
 
 def importModules(addonDirName):
-    #normally getModuleNames yields/returns this load_and_reg file too, so we manually remove that, so that we don't have to check tnModule == __name__ ever again
-    #Then we Import the other Modules
-    for tnModuleName in tnModuleNames:
-        if tnModuleName == __name__:
-            tnModuleNames.remove(tnModuleName)
+    return [importlib.import_module('.' + moduleName, addonDirName) for moduleName in moduleNames if moduleName != __name__]
+
+    #I used a list comprenhension because it's almost 50% faster https://stackoverflow.com/q/30245397
+    #similar to this Below
+    #for tnModuleName in tnModuleNames:
+    #    normally getModuleNames yields/returns this load_and_reg file too, so we check for that case
+    #    if tnModuleName == __name__:
+    #        continue
+    #    else:
+    #        importedModules.append(importlib.import_module('.' + tnModuleName, addonDirName))
+
+def getSubClasses(parentClasses):
+    """ return all the SubClasses which's parent Class is in parentClasses searching throught all the modulesImported"""
+    classesToRegister = []
+
+    for module in modulesImported:
+        for value in module.__dict__.values():
+            if inspect.isclass(value):
+                #issubclass does support passing in a tuple or list
+                if issubclass(value, parentClasses) and not hasattr(bpy.types, value.__name__):
+                    print(value, "appending")
+                    classesToRegister.append(value)
+
+    return classesToRegister
+
+def getDependencyClasses():
+    dependencies = []
+
+    alreadyAdded = []
+    for cls in moduleClasses:
+        #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
+        if not hasattr(cls, "__annotations__"):
             continue
-        else:
-            yield importlib.import_module('.' + tnModuleName, addonDirName)
+        for value in typing.get_type_hints(cls, {}, {}).values():
+            if isinstance(value, tuple) and len(value) == 2:
+                if value[0] in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
+                    dependency = value[1]["type"]
+                    if dependency not in alreadyAdded:
+                        alreadyAdded.append(dependency)
+                        if hasattr(bpy.types, dependency.__name__):
+                            continue
+                        dependencies.append(dependency)
+    
+    return dependencies
 
-#Consists of two steps, Loading the names of the modules in tnModuleNames, STEP 2 is to import the Modules
+
+
+
+# WHAT YOU CAME HERE FOR 
+# [a.k.a LIBRARY FUNCTIONS for PEOPLE WHO WANT TO AUTOMATE BLENDER ADDON REGISTRATION]
+# --------------------------##############################--------------------------------
+
+# RULES
+# 1. if you have .py files inside some directories, you need to have __init__.py file inside those directories. [empty __init__.py is okay]
+# 1.1 This Treats that directory as a Package
+# 1.2 A Package is simply a Directory which has a __init__.py inside it, So yes if you have py files inside a Dir which need to be reg. make __init__.py
+# --
+# 2. call loadModules, parameter should be the directory that your addon is inside
+# 3. You can call registerModules(), in that case all your modules which has register will be called, and you will need to manually do bpy.utils.register_class() inside those
+# --
+# 4. Or, you can call loadClasses, after loadModules, which will load all the classes which are subclasses of bpy.types.Type
+# 4.1 if any of your Classes has a bpy.props.PointerProperty or bpy.props.CollectionProperty, [note that these 2 props has 'type' parameter] with type set to manual type
+# ---- e.g. class CollectionPropertyGroup(bpy.types.PropertyGroup):
+# ----           object: PointerProperty(type = Object)
+# ----
+# ---- then used like this, 
+# ----       objectCP: CollectionProperty(type = ObjectPropertyGroup)
+# ----
+# ---- in that case ObjectPropertyGroup is considered to be a dependencyClass and is registered before all the other classes are registered
+# 5. Call registerClasses() [THE END]
+
 def loadModules(addonDir):
-    global tnModuleNames
-    global tnModulesImported
+    global moduleNames
+    global modulesImported
 
-    tnModuleNames = getModuleNames(addonDir)
+    #For Now moduleNames is just a Generator Object [Generator Objects:- https://www.youtube.com/watch?v=ixiRkUwPI2A&t=3700s]
+    moduleNames = getModuleNames(addonDir)
 
     if not isinstance(addonDir, Path):
         addonDir = Path(addonDir)
     addonDirName = addonDir.name
 
-    tnModulesImported = importModules(addonDirName)
+    modulesImported = importModules(addonDirName)
 
+#Use this when you have an register() function inside all your modules that need to be registered, meaning that use this when doing register_class inside every module itself
 def registerModules():
-    for tnModule in tnModulesImported:
-        if hasattr(tnModule, 'register'):
-            tnModule.register()
+    for module in modulesImported:
+        if hasattr(module, 'register'):
+            module.register()
 
 def unregisterModules():
-    for tnModule in tnModulesImported:
-        if hasattr(tnModule, 'unregister'):
-            tnModule.unregister()
+    for module in modulesImported:
+        if hasattr(module, 'unregister'):
+            module.unregister()
 
+
+
+
+# You can Either Add any Type from bpy.types here inside bpyTypes, 
+# Or you can make your own tuple/list like I did and pass that to loadClasses 
+bpyTypesDefault = tuple(getattr(bpy.types, name) for name in [
+    'Operator',
+    'Panel',
+    'PropertyGroup'
+])
+
+def loadClasses(parentClasses = bpyTypesDefault):
+    """ Load all the Classes which are SubClasses of parentClasses, usually we need to bpy.utils.register_class() which have at least one bpy.types.{ClassName} as base"""
+    global moduleClasses
+    global dependencyClasses
+
+    moduleClasses = getSubClasses(parentClasses)
+    dependencyClasses = getDependencyClasses()
+
+    for cls in dependencyClasses:
+        moduleClasses.remove(cls)
+
+def registerClasses():
+    for cls in dependencyClasses:
+        print("rEG DEP:-", str(cls))
+        bpy.utils.register_class(cls)
+
+    for cls in moduleClasses:
+        print("rEG:-", str(cls))
+        bpy.utils.register_class(cls)
+
+def unregisterClasses():
+    for cls in reversed(moduleClasses):
+        print("uNrEG:-", str(cls))
+        bpy.utils.unregister_class(cls)
+
+    for cls in dependencyClasses:
+        print("uNrEG:-", str(cls))
+        bpy.utils.unregister_class(cls)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# EXTENDED VERSIONS, UNDER CONSTRUCTION, STAY AT A SAFE DISTANCE, SEE ABOVE FOR WHAT YOU CAME FOR
+# --------------------------#################################-------------------------------------
 
 
 # Extended Versions, [TODO]
 # Older Implementations,
 # Documentations - [TODO]
 # As the Functions above are sorted, [Top-to-Bottom]
-# ------------------------------------------------------------------------
+# --------------------------#################################-------------------------------------
 
 """ getModuleNames(root, package = '')
 This function Gets all modules inside of a directory

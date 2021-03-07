@@ -190,12 +190,12 @@ def register():
         print("CALLING FROM tn_nodes.py inside source/nodes", sys.path)
 
 def unregister():
-    register_class(ObjectPropertyGroup)
-    register_class(CollectionPropertyGroup)
+    unregister_class(ObjectPropertyGroup)
+    unregister_class(CollectionPropertyGroup)
 
     #Nodes
-    register_class(ObjectSelectionNode)
-    register_class(ViewerNode)
+    unregister_class(ObjectSelectionNode)
+    unregister_class(ViewerNode)
     if True:
         print("ObjectSelectionNode UnRegistered")
         print("ViewerNode UnRegistered")
