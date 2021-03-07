@@ -81,7 +81,7 @@ def getSubClasses(parentClasses):
 def getDependencyClasses():
     dependencies = []
 
-    alreadyAdded = []
+    alreadyAdded = set()
     for cls in moduleClasses:
         #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
         if not hasattr(cls, "__annotations__"):
@@ -91,7 +91,7 @@ def getDependencyClasses():
                 if value[0] in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
                     dependency = value[1]["type"]
                     if dependency not in alreadyAdded:
-                        alreadyAdded.append(dependency)
+                        alreadyAdded.add(dependency)
                         if hasattr(bpy.types, dependency.__name__):
                             continue
                         dependencies.append(dependency)
