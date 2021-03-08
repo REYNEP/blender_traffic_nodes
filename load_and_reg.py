@@ -144,6 +144,7 @@ def getClassDependencies():
 # ==
 # 5. If you have imported something in this way, 'from bpy.types import Object' Then don't forget to set DID_IMPORT_CLASS_FROM_MODULE to True in this Module
 # ---- Even in case you just imported a Class of your own from a module in that way.... By class I meant class which is supposed to be bpy.utils.register_class
+# ---- If you don't do this kind of Stuff, Please make DID_IMPORT_CLASS_FROM_MODULE False, it would Make Loading Blender Faster
 # ==
 # 6. If you want to exlude any Class in a module from registering, make a 'classesNotToReg' list/tuple/set [set is recommended] and add class to that list
 # 6.3 Finding an Element inside Set takes way less time https://stackoverflow.com/a/17945009
