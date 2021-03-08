@@ -8,7 +8,7 @@ But I wanted Faster Implementations, So I Made My Approach
 
 Following JacquesLucke, Mainly His Animation Nodes Copde from 2014-15 is helping me so far so good
 Simulation will be done with c++
-Releases will have Binary Files
+Releases will have Binary Files for those c++ code
 
 # dependencies
 numpy (should be included with Your Blender Installation)
