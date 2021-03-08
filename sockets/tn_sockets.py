@@ -4,7 +4,6 @@ from bpy.props import StringProperty, FloatVectorProperty
 
 
 classesNotToReg = {
-    'Vec3DListSocket',
     'Vec3DSocket'
 }
 

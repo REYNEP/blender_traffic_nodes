@@ -14,6 +14,12 @@ nodeCategories = [
     ]),
     TrafficNodesCategory("GODSEYES", "God's Eye's", items = [
         NodeItem("ViewerNode")
+    ]),
+    TrafficNodesCategory("UTILS", "Mechanic's Box", items = [
+        NodeItem("ObjectListToLocationsList")
+    ]),
+    TrafficNodesCategory("SIMOUTPUT", "Simulation Outputs", items = [
+        NodeItem("SetInitialPositionsNode")
     ])
 ]
 

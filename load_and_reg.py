@@ -5,13 +5,14 @@ import pkgutil
 from pathlib import Path
 import importlib
 #Req for loadClasses
-import bpy.types
+import bpy
 import inspect
 import typing
 
 import bpy.utils
 
 
+DID_IMPORT_CLASS_FROM_MODULE = True
 
 moduleNames = []
 modulesImported = []
@@ -57,45 +58,60 @@ def importModules(addonDirName):
     #    else:
     #        importedModules.append(importlib.import_module('.' + tnModuleName, addonDirName))
 
+def iterAllClasses(module):
+    """return all the Classes in the module"""
+    excludeClasses = set()
+    if hasattr(module, 'classesNotToReg'):
+        excludeClasses = module.classesNotToReg
+
+    for value in module.__dict__.values():
+        if inspect.isclass(value):
+            if not value.__name__ in excludeClasses:
+                yield value
+
 def getSubClasses(parentClasses):
     """ return all the SubClasses which's parent Class is in parentClasses searching throught all the modulesImported"""
     classesToRegister = []
     added = set()
 
-    for module in modulesImported:
-        excludeClasses = set()
-        if hasattr(module, 'classesNotToReg'):
-            excludeClasses = module.classesNotToReg
-        
-        for value in module.__dict__.values():
-            if inspect.isclass(value):
-                if value.__name__ in excludeClasses:
-                    continue
-                
+    if DID_IMPORT_CLASS_FROM_MODULE:
+        for module in modulesImported:
+            for cls in iterAllClasses(module):
                 #issubclass does support passing in a tuple or list
-                if issubclass(value, parentClasses) and not hasattr(bpy.types, value.__name__) and value not in added:
-                    added.add(value)
-                    print(value, "appending")
-                    classesToRegister.append(value)
+                if any(base in parentClasses for base in cls.__bases__) and cls not in added:
+                    added.add(cls)
+                    if hasattr(bpy.types, cls.__name__):
+                        continue
+                    
+                    print(cls, "appending")
+                    classesToRegister.append(cls)
+    else:
+        for module in modulesImported:
+            for cls in iterAllClasses(module):
+                if any(base in parentClasses for base in cls.__bases__):
+                    added.add(cls)
+                    print(cls, "appending")
+                    classesToRegister.append(cls)
 
     return classesToRegister
 
 
-alreadyAdded = set()
 def bpyPropsDependencies(cls):
+    added = set()
     #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
     if not hasattr(cls, "__annotations__"):
         return
     for value in typing.get_type_hints(cls, {}, {}).values():
-        if isinstance(value, tuple) and len(value) == 2:
-            if value[0] in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
-                dependency = value[1]["type"]
-                if dependency not in alreadyAdded:
-                    alreadyAdded.add(dependency)
-                    if hasattr(bpy.types, dependency.__name__):
-                        continue
-                    bpyPropsDependencies(dependency)
-                    classDepsSorted.append(dependency)
+        if value.function in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
+            #Currently only the above two bpy.props has 'type' option/parameter:
+            dependency = value.keywords.get("type")
+
+            if dependency not in added:
+                added.add(dependency)
+                if hasattr(bpy.types, dependency.__name__):
+                    continue
+                bpyPropsDependencies(dependency)
+                classDepsSorted.append(dependency)
 
 def getClassDependencies():
     for cls in classesToReg:
@@ -112,10 +128,10 @@ def getClassDependencies():
 # 1. if you have .py files inside some directories, you need to have __init__.py file inside those directories. [empty __init__.py is okay]
 # 1.1 This Treats that directory as a Package
 # 1.2 A Package is simply a Directory which has a __init__.py inside it, So yes if you have py files inside a Dir which need to be reg. make __init__.py
-# --
+# ==
 # 2. call loadModules, parameter should be the directory that your addon is inside
 # 3. You can call registerModules(), in that case all your modules which has register will be called, and you will need to manually do bpy.utils.register_class() inside those
-# --
+# ==
 # 4. Or, you can call loadClasses, after loadModules, which will load all the classes which are subclasses of bpy.types.Type
 # 4.1 if any of your Classes has a bpy.props.PointerProperty or bpy.props.CollectionProperty, [note that these 2 props has 'type' parameter] with type set to manual type
 # ---- e.g. class CollectionPropertyGroup(bpy.types.PropertyGroup):
@@ -125,17 +141,20 @@ def getClassDependencies():
 # ----       objectCP: CollectionProperty(type = ObjectPropertyGroup)
 # ----
 # ---- in that case ObjectPropertyGroup is considered to be a dependencyClass and is registered before all the other classes are registered
-# --
-# 5. If you want to exlude any Class in a module from registering, make a 'classesNotToReg' list/tuple/set [set is recommended] and add class to that list
-# 5.3 Finding an Element inside Set takes way less time https://stackoverflow.com/a/17945009
-# 5.0 Sometimes, registering some classes like Operator and not actually using them can cause errors while trying to unregister_class
-# 5.1 If having errors, you might note that, you just have to put NAMES [STR] of your classes, and not the classes itself
-# 5.2 e.g  
+# ==
+# 5. If you have imported something in this way, 'from bpy.types import Object' Then don't forget to set DID_IMPORT_CLASS_FROM_MODULE to True in this Module
+# ---- Even in case you just imported a Class of your own from a module in that way.... By class I meant class which is supposed to be bpy.utils.register_class
+# ==
+# 6. If you want to exlude any Class in a module from registering, make a 'classesNotToReg' list/tuple/set [set is recommended] and add class to that list
+# 6.3 Finding an Element inside Set takes way less time https://stackoverflow.com/a/17945009
+# 6.0 Sometimes, registering some classes like Operator and not actually using them can cause errors while trying to unregister_class
+# 6.1 If having errors, you might note that, you just have to put NAMES [STR] of your classes, and not the classes itself
+# 6.2 e.g  
 # ----     classesNotToReg = set(
 # ----         'ExecuteNodeTree'    #This is a Name of a Class
 # ----     )
-# --
-# 6. Call registerClasses() [THE END]
+# ==
+# 7. Call registerClasses() [THE END]
 
 def loadModules(addonDir):
     global moduleNames

@@ -15,4 +15,4 @@ Simulation will be done with c++
 Releases will have Binary Files for those c++ code
 
 # dependencies
-numpy (should be included with Your Blender Installation)
+Nothign, really.....
