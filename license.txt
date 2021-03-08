@@ -19,3 +19,4 @@ Because of the Inspiration and also I mostly Followed His Older Code to Do it Fa
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 This license hereby stands for all the files inside this repository. All files are under GNU General Public License version 3
+There is a load_and_reg.py file, you are Free to use it anywhere you want, GNU General Public License Version 3 a.k.a this license will also apply to that file.
