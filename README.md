@@ -1,3 +1,7 @@
+# update
+Now there is load_and_reg.py file, which is mainly inspired by jacques Lucke's auto_load.py Blender Addon Auto Registration Module, I did some changes of my own to make it faster
+Anyone is Welcome to use it. 😄
+
 # blender_traffic_nodes
 I was trying to Create a Traffic System in blender, 
 But it Seems Like, Calculating a Middle frame will always end up requiring info on the last frame
