@@ -8,6 +8,14 @@ from bpy.props import PointerProperty, CollectionProperty, BoolProperty
 from . tn_node_base import TrafficNode, ObjectPropertyGroup, CollectionPropertyGroup
 
 
+
+#TODO INSPECT MAYBE SEP into another file 
+class ObjectPropertyGroup(bpy.types.PropertyGroup):
+    object: PointerProperty(type = Object)
+    
+class CollectionPropertyGroup(bpy.types.PropertyGroup):
+    collection: PointerProperty(type = Collection)
+
 class ViewerNode(Node, TrafficNode):
     bl_idname = "ViewerNode"
     bl_label = "Viewer Node Mk.1"

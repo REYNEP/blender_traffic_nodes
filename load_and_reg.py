@@ -16,7 +16,7 @@ import bpy.utils
 moduleNames = []
 modulesImported = []
 classesToReg = []
-classDependencies = []      #Note that dependencyClasses are also inside MODULES which were Imported
+classDepsSorted = []      #Note that classDepsSorted are also inside MODULES which were Imported
 
 # LIBRARY UTILITIES
 # [a.k.a Functions that are used by the LIBRARY FUNCTIONS, (See Below for LIBRARY FUNCS)]
@@ -95,9 +95,9 @@ def bpyPropsDependencies(cls):
                     if hasattr(bpy.types, dependency.__name__):
                         continue
                     bpyPropsDependencies(dependency)
-                    classDependencies.append(dependency)
+                    classDepsSorted.append(dependency)
 
-def getDependencyClasses():
+def getClassDependencies():
     for cls in classesToReg:
         bpyPropsDependencies(cls)
 
@@ -169,22 +169,29 @@ def unregisterModules():
 bpyTypesDefault = tuple(getattr(bpy.types, name) for name in [
     'Operator',
     'Panel',
+    'Node',
+    'NodeTree',
+    'NodeSocket',
+    'Menu',
+    'Header',
+    'UIList',
+    'AddonPreferences',
     'PropertyGroup'
 ])
 
 def loadClasses(parentClasses = bpyTypesDefault):
     """ Load all the Classes which are SubClasses of parentClasses, usually we need to bpy.utils.register_class() which have at least one bpy.types.{ClassName} as base"""
     global classesToReg
-    global classDependencies
+    global classDepsSorted
 
     classesToReg = getSubClasses(parentClasses)
-    getDependencyClasses()
+    getClassDependencies()
 
-    for cls in classDependencies:
+    for cls in classDepsSorted:
         classesToReg.remove(cls)
 
 def registerClasses():
-    for cls in classDependencies:
+    for cls in classDepsSorted:
         print("rEG DEP:-", str(cls))
         bpy.utils.register_class(cls)
 
@@ -197,8 +204,8 @@ def unregisterClasses():
         print("uNrEG:-", str(cls))
         bpy.utils.unregister_class(cls)
 
-    for cls in classDependencies:
-        print("uNrEG:-", str(cls))
+    for cls in reversed(classDepsSorted):
+        print("uNrEG DEP:-", str(cls))
         bpy.utils.unregister_class(cls)
 
 
