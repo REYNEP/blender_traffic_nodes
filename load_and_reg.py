@@ -15,8 +15,8 @@ import bpy.utils
 
 moduleNames = []
 modulesImported = []
-moduleClasses = []
-dependencyClasses = []      #Note that dependencyClasses are also inside MODULES which were Imported
+classesToReg = []
+classDependencies = []      #Note that dependencyClasses are also inside MODULES which were Imported
 
 # LIBRARY UTILITIES
 # [a.k.a Functions that are used by the LIBRARY FUNCTIONS, (See Below for LIBRARY FUNCS)]
@@ -60,6 +60,7 @@ def importModules(addonDirName):
 def getSubClasses(parentClasses):
     """ return all the SubClasses which's parent Class is in parentClasses searching throught all the modulesImported"""
     classesToRegister = []
+    added = set()
 
     for module in modulesImported:
         excludeClasses = set()
@@ -72,31 +73,33 @@ def getSubClasses(parentClasses):
                     continue
                 
                 #issubclass does support passing in a tuple or list
-                if issubclass(value, parentClasses) and not hasattr(bpy.types, value.__name__):
+                if issubclass(value, parentClasses) and not hasattr(bpy.types, value.__name__) and value not in added:
+                    added.add(value)
                     print(value, "appending")
                     classesToRegister.append(value)
 
     return classesToRegister
 
-def getDependencyClasses():
-    dependencies = []
 
-    alreadyAdded = set()
-    for cls in moduleClasses:
-        #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
-        if not hasattr(cls, "__annotations__"):
-            continue
-        for value in typing.get_type_hints(cls, {}, {}).values():
-            if isinstance(value, tuple) and len(value) == 2:
-                if value[0] in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
-                    dependency = value[1]["type"]
-                    if dependency not in alreadyAdded:
-                        alreadyAdded.add(dependency)
-                        if hasattr(bpy.types, dependency.__name__):
-                            continue
-                        dependencies.append(dependency)
-    
-    return dependencies
+alreadyAdded = set()
+def bpyPropsDependencies(cls):
+    #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
+    if not hasattr(cls, "__annotations__"):
+        return
+    for value in typing.get_type_hints(cls, {}, {}).values():
+        if isinstance(value, tuple) and len(value) == 2:
+            if value[0] in (bpy.props.PointerProperty, bpy.props.CollectionProperty):
+                dependency = value[1]["type"]
+                if dependency not in alreadyAdded:
+                    alreadyAdded.add(dependency)
+                    if hasattr(bpy.types, dependency.__name__):
+                        continue
+                    bpyPropsDependencies(dependency)
+                    classDependencies.append(dependency)
+
+def getDependencyClasses():
+    for cls in classesToReg:
+        bpyPropsDependencies(cls)
 
 
 
@@ -171,30 +174,30 @@ bpyTypesDefault = tuple(getattr(bpy.types, name) for name in [
 
 def loadClasses(parentClasses = bpyTypesDefault):
     """ Load all the Classes which are SubClasses of parentClasses, usually we need to bpy.utils.register_class() which have at least one bpy.types.{ClassName} as base"""
-    global moduleClasses
-    global dependencyClasses
+    global classesToReg
+    global classDependencies
 
-    moduleClasses = getSubClasses(parentClasses)
-    dependencyClasses = getDependencyClasses()
+    classesToReg = getSubClasses(parentClasses)
+    getDependencyClasses()
 
-    for cls in dependencyClasses:
-        moduleClasses.remove(cls)
+    for cls in classDependencies:
+        classesToReg.remove(cls)
 
 def registerClasses():
-    for cls in dependencyClasses:
+    for cls in classDependencies:
         print("rEG DEP:-", str(cls))
         bpy.utils.register_class(cls)
 
-    for cls in moduleClasses:
+    for cls in classesToReg:
         print("rEG:-", str(cls))
         bpy.utils.register_class(cls)
 
 def unregisterClasses():
-    for cls in moduleClasses:
+    for cls in classesToReg:
         print("uNrEG:-", str(cls))
         bpy.utils.unregister_class(cls)
 
-    for cls in dependencyClasses:
+    for cls in classDependencies:
         print("uNrEG:-", str(cls))
         bpy.utils.unregister_class(cls)
 

@@ -5,15 +5,8 @@ from bpy.utils import register_class, unregister_class
 from bpy.types import Node, Object, Collection, Text
 from bpy.props import PointerProperty, CollectionProperty, BoolProperty
 # Lets See if this FIxes the issue or not
-from . tn_node_base import TrafficNode
+from . tn_node_base import TrafficNode, ObjectPropertyGroup, CollectionPropertyGroup
 
-
-#TODO INSPECT MAYBE SEP into another file 
-class ObjectPropertyGroup(bpy.types.PropertyGroup):
-    object: PointerProperty(type = Object)
-    
-class CollectionPropertyGroup(bpy.types.PropertyGroup):
-    collection: PointerProperty(type = Collection)
 
 class ViewerNode(Node, TrafficNode):
     bl_idname = "ViewerNode"
