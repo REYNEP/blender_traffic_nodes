@@ -5,7 +5,7 @@ from bpy.utils import register_class, unregister_class
 from bpy.types import Node, Object, Collection, Text
 from bpy.props import PointerProperty, CollectionProperty, BoolProperty
 # Lets See if this FIxes the issue or not
-from . tn_node_base import TrafficNode, ObjectPropertyGroup, CollectionPropertyGroup
+from . tn_node_base import TrafficNode
 
 
 
@@ -154,6 +154,15 @@ class ObjectSelectionNode(Node, TrafficNode):
 
 
 #class ObjectListToLocationsList(Node, TrafficNode):
+#    bl_idname = "ObjectListToLocationsList"
+#	 bl_label = "Object List To Locations List"
+#
+#    def init(self, context):
+#        self.inputs.new("ObjectListSocket", "Object List")
+#        self.outputs.new("LocationListSocket", "Location List")
+#
+#    def execute(self, input):
+
 
 #class SetInitialPositionsNode(Node, TrafficNode):
 #	bl_idname = "SetInitialPositionsNode"

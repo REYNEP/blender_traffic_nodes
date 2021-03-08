@@ -16,5 +16,5 @@ class TrafficNodesTree(NodeTree):
     isTrafficNodeTree: BoolProperty(default = True)
 
     def update(self):
-        #TODO
+        #Did some tests, Feels like, this is only invoked, when A New Node is added or a Socket is Changed
         pass
