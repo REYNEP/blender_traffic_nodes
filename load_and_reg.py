@@ -243,6 +243,15 @@ def loadClasses(parentClasses = bpyTypesDefault):
     classesByIDName = {cls.bl_idname : cls for cls in classesToReg if hasattr(cls, "bl_idname")}
     getClassDependencies()
 
+    #Optimiz. DevLog-1
+    #Used to be like this:
+    #for cls in classDepsSorted:
+    #    classesToReg.remove(cls)
+    #But remove takes a total of O(n) timeComplexity 
+    #So we Make some changes in getClassDependencies in the last commit,
+    #and made a global nonDepClassesIndexes, Which is used later for registering
+    #I don't know. maybe this way is slower than Lucke's Toposort approach
+
 def registerClasses():
     for cls in classDeps_Props:
         print("rEG pROPsdEP:-", str(cls))
