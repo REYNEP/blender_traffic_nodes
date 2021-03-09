@@ -16,8 +16,11 @@ DID_IMPORT_CLASS_FROM_MODULE = True
 
 moduleNames = []
 modulesImported = []
-classesToReg = []
-classDepsSorted = []      #Note that classDepsSorted are also inside MODULES which were Imported
+classesToReg = []           #Doesn't Contain Any Double
+classesByIDName = {}        #A Dictionary, It is Set in registerClasses Function
+classDeps_Props = []        #Note that classDeps_Props are also inside MODULES which were Imported
+classDeps_Panels = []       #We're Only adding the ParentPanels Here
+nonDepClassesIndexes = []   #Earlier we were removing classDeps_props and classDeps_Panels from classesToReg but that takes O(n) per remove
 
 # LIBRARY UTILITIES
 # [a.k.a Functions that are used by the LIBRARY FUNCTIONS, (See Below for LIBRARY FUNCS)]
@@ -96,8 +99,28 @@ def getSubClasses(parentClasses):
     return classesToRegister
 
 
+addedDeps = set()   #Needs to be outside because bpyPropsDependencies is a Recursive one + We actually found a usage for it
+
+#Copied from AN on 2021 MAR 09
+#def iter_my_deps_from_parent_id(cls, my_classes_by_idname):
+#    if bpy.types.Panel in cls.__bases__:
+#       parent_idname = getattr(cls, "bl_parent_id", None)
+#        if parent_idname is not None:
+#           parent_cls = my_classes_by_idname.get(parent_idname)
+#            if parent_cls is not None:
+#                yield parent_cls
+# AND MODIFIED
+def bpyPanelDependencies(cls):
+    if bpy.types.Panel in cls.__bases__:
+        parent_idname = getattr(cls, "bl_parent_id", None)
+        if parent_idname is not None:
+            parent_cls = classesByIDName.get(parent_idname)
+            if parent_cls is not None:
+                addedDeps.append(parent_cls)
+                bpyPanelDependencies(parent_cls)
+                classDeps_Panels.append(parent_cls)
+
 def bpyPropsDependencies(cls):
-    added = set()
     #TO Understand what's Really going On here: https://www.youtube.com/watch?v=2wDvzy6Hgxg [Guido Introduces Type Hints, PyCon 2015]
     if not hasattr(cls, "__annotations__"):
         return
@@ -106,16 +129,27 @@ def bpyPropsDependencies(cls):
             #Currently only the above two bpy.props has 'type' option/parameter:
             dependency = value.keywords.get("type")
 
-            if dependency not in added:
-                added.add(dependency)
+            if dependency not in addedDeps:
+                addedDeps.add(dependency)   #Checking for bpy.types.Type in addedDeps is better than hasAttr I think
                 if hasattr(bpy.types, dependency.__name__):
                     continue
                 bpyPropsDependencies(dependency)
-                classDepsSorted.append(dependency)
+                classDeps_Props.append(dependency)
 
 def getClassDependencies():
+    global nonDepClassesIndexes
+
     for cls in classesToReg:
-        bpyPropsDependencies(cls)
+        if cls not in addedDeps:
+            #If cls is in addedDeps that means that cls [which itself is an dep of some other class] and it's own deps has been added
+            bpyPropsDependencies(cls)
+            bpyPanelDependencies(cls)
+
+    index = 0
+    for cls in classesToReg:
+        if cls not in addedDeps:
+            nonDepClassesIndexes.append(index)
+        index += 1
 
 
 
@@ -202,29 +236,36 @@ bpyTypesDefault = tuple(getattr(bpy.types, name) for name in [
 def loadClasses(parentClasses = bpyTypesDefault):
     """ Load all the Classes which are SubClasses of parentClasses, usually we need to bpy.utils.register_class() which have at least one bpy.types.{ClassName} as base"""
     global classesToReg
-    global classDepsSorted
+    global classDeps_Props
+    global classesByIDName
 
     classesToReg = getSubClasses(parentClasses)
+    classesByIDName = {cls.bl_idname : cls for cls in classesToReg if hasattr(cls, "bl_idname")}
     getClassDependencies()
 
-    for cls in classDepsSorted:
-        classesToReg.remove(cls)
-
 def registerClasses():
-    for cls in classDepsSorted:
-        print("rEG DEP:-", str(cls))
+    for cls in classDeps_Props:
+        print("rEG pROPsdEP:-", str(cls))
         bpy.utils.register_class(cls)
 
-    for cls in classesToReg:
-        print("rEG:-", str(cls))
+    for i in nonDepClassesIndexes:
+        print("rEG:-", str(classesToReg[i]))
+        bpy.utils.register_class(classesToReg[i])
+
+    for cls in classDeps_Panels:
+        print("rEG pANELsdEP:-", str(cls))
         bpy.utils.register_class(cls)
 
 def unregisterClasses():
+    for cls in reveresed(classDeps_Panels):
+        print("uNrEG pANELsdEP:-", str(cls))
+        bpy.utils.unregister_class(cls)
+
     for cls in classesToReg:
         print("uNrEG:-", str(cls))
         bpy.utils.unregister_class(cls)
 
-    for cls in reversed(classDepsSorted):
+    for cls in reversed(classDeps_Props):
         print("uNrEG DEP:-", str(cls))
         bpy.utils.unregister_class(cls)
 
